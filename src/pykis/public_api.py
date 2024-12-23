@@ -42,7 +42,7 @@ class Api:  # pylint: disable=too-many-public-methods
         """
         self.key: Json = key_info
         self.domain: DomainInfo = domain_info
-        self.token: AccessToken = AccessToken()
+        self.token: AccessToken = AccessToken(key_info)
         self.account: Optional[NamedTuple] = None
 
         self.set_account(account_info)

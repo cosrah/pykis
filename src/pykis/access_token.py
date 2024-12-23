@@ -27,10 +27,12 @@ class AccessToken:
     인증용 토큰 정보를 담을 클래스
     """
 
-    def __init__(self, cache_file: str = "access_token_cache.json") -> None:
+    def __init__(self, key_info: json = {}, cache_file: str = "access_token_cache.json") -> None:
         self.value: Optional[str] = None
         self.valid_until: Optional[datetime] = None
         self.cache_file = cache_file
+
+        self.key_info = key_info
 
         self.load_from_cache()
 
@@ -53,10 +55,17 @@ class AccessToken:
 
     def save_to_cache(self) -> None:
         if self.value and self.valid_until:
-            data = {
+            data = {}
+
+            if os.path.exists(self.cache_file):
+                with open(self.cache_file, "r") as f:
+                    data = json.load(f)
+
+            data[self.key_info.get("appkey")] = {
                 "value": self.value,
                 "valid_until": self.valid_until.isoformat()
             }
+
             with open(self.cache_file, "w") as f:
                 json.dump(data, f)
 
@@ -64,6 +73,7 @@ class AccessToken:
         if os.path.exists(self.cache_file):
             with open(self.cache_file, "r") as f:
                 data = json.load(f)
+                data = data.get(self.key_info.get("appkey"))
                 valid_until = datetime.fromisoformat(data["valid_until"])
 
                 if datetime.now() < valid_until:
