@@ -119,11 +119,12 @@ def get_base_headers() -> Json:
     return base
 
 
-def send_get_request(url: str, headers: Json, params: Json, raise_flag: bool = True) -> APIResponse:
+def send_get_request(url: str, headers: Json, params: Json, raise_flag: bool = True, timeout: int = 180) -> APIResponse:
     """
     HTTP GET method로 request를 보내고 APIResponse 객체를 반환한다.
     """
-    resp = requests.get(url, headers=headers, params=params, timeout=30)
+    # Timeout 값을 60초로 변경
+    resp = requests.get(url, headers=headers, params=params, timeout=timeout)
     api_resp = APIResponse(resp)
 
     if raise_flag:
@@ -133,15 +134,19 @@ def send_get_request(url: str, headers: Json, params: Json, raise_flag: bool = T
 
 
 def send_post_request(url: str, headers: Json, params: Json,
-                      raise_flag: bool = True) -> APIResponse:
+                      raise_flag: bool = True, timeout: int = 180) -> APIResponse:
     """
     HTTP POST method로 request를 보내고 APIResponse 객체를 반환한다.
     """
-    resp = requests.post(url, headers=headers,
-                         data=json.dumps(params), timeout=30)
+    # Timeout 값을 60초로 변경
+    resp = requests.post(url,
+                         headers=headers,
+                         data=json.dumps(params),
+                         timeout=timeout)
     api_resp = APIResponse(resp)
 
     if raise_flag:
         api_resp.raise_if_error()
 
     return api_resp
+
