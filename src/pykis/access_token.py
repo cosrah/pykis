@@ -74,12 +74,18 @@ class AccessToken:
             with open(self.cache_file, "r") as f:
                 data = json.load(f)
                 data = data.get(self.key_info.get("appkey"))
-                valid_until = datetime.fromisoformat(data["valid_until"])
+                if data:
+                    valid_until = None
+                    valid_until_prev = data.get("valid_until")
+                    if valid_until_prev:
+                        valid_until = datetime.fromisoformat(data.get(["valid_until"]))
 
-                if datetime.now() < valid_until:
-                    self.value = data["value"]
-                    self.valid_until = valid_until
+                    if valid_until and datetime.now() < valid_until:
+                        self.value = data["value"]
+                        self.valid_until = valid_until
+                    else:
+                        self.value = None
+                        self.valid_until = None
                 else:
-                    # 만료된 경우 캐시 초기화
                     self.value = None
                     self.valid_until = None
