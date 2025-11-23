@@ -1,4 +1,5 @@
 # pykis
+- *https://github.com/pjueon/pykis* 원본에서 개인적으로 필요한 코드 추가한 버전.
 - pykis는 한국투자증권에서 제공하는 Open Trading API를 쉽게 사용하기 위한 **비공식** python wrapper입니다. 
 - 기존 eFriend expert (HTS 프로그램) 연동 방식 API 대비 다음과 같은 장점들이 있습니다. 
   - Web API 방식 사용 
