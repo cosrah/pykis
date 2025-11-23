@@ -42,7 +42,7 @@ class Api:  # pylint: disable=too-many-public-methods
         """
         self.key: Json = key_info
         self.domain: DomainInfo = domain_info
-        self.token: AccessToken = AccessToken(key_info)
+        self.token: AccessToken = AccessToken()
         self.account: Optional[NamedTuple] = None
 
         self.set_account(account_info)
@@ -62,11 +62,17 @@ class Api:  # pylint: disable=too-many-public-methods
     def create_token(self) -> None:
         """
         access token을 발급한다.
+        캐시에 유효한 토큰이 있으면 재사용하고, 없으면 새로 발급한다.
         """
+        # 캐시에서 토큰 로드 시도
+        key_info = self.get_api_key_data()
+        if self.token.load_from_cache(key_info):
+            return
+
         url_path = "/oauth2/tokenP"
 
         params = merge_json([
-            self.get_api_key_data(),
+            key_info,
             {
                 "grant_type": "client_credentials"
             }
@@ -77,7 +83,7 @@ class Api:  # pylint: disable=too-many-public-methods
         response = self._send_post_request(req)
         body = to_namedtuple("body", response.body)
 
-        self.token.create(body)
+        self.token.create(body, key_info)
 
     def need_authentication(self) -> bool:
         """

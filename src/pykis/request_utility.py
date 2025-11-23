@@ -17,10 +17,9 @@ request 관련 유틸리티 모듈
 
 from typing import NamedTuple, Optional, Dict, Any, List
 import json
-
 import time
 import requests
-from requests.exceptions import RequestException
+from json import JSONDecodeError
 
 Json = Dict[str, Any]
 
@@ -122,50 +121,53 @@ def get_base_headers() -> Json:
     return base
 
 
-def send_get_request(url: str, headers: Json, params: Json, 
-                     raise_flag: bool = True, timeout: int = 300, 
-                     retries: int = 5, retry_delay: int = 5) -> APIResponse:
+def send_get_request(url: str, headers: Json, params: Json, raise_flag: bool = True) -> APIResponse:
     """
     HTTP GET method로 request를 보내고 APIResponse 객체를 반환한다.
-    실패 시 일정 시간 간격으로 재시도를 수행한다.
+    요청 실패 시 1초 간격으로 최대 5번 재시도한다.
     """
-    for attempt in range(retries):
+    max_retries = 5
+    retry_interval = 1  # seconds
+    
+    for attempt in range(max_retries):
         try:
-            resp = requests.get(url, headers=headers, params=params, timeout=timeout)
+            resp = requests.get(url, headers=headers, params=params, timeout=30)
             api_resp = APIResponse(resp)
+
             if raise_flag:
                 api_resp.raise_if_error()
+
             return api_resp
-        except (RequestException, RuntimeError) as e:
-            if attempt < retries - 1:
-                print(f"GET 요청 실패, {retry_delay}초 후 재시도. ({attempt + 1}/{retries})")
-                time.sleep(retry_delay)
+        except (RuntimeError, requests.RequestException, JSONDecodeError):
+            if attempt < max_retries - 1:
+                time.sleep(retry_interval)
+                continue
             else:
-                print("GET 요청 실패: 재시도 횟수 초과.")
-                raise e
+                raise
 
 
-
-def send_post_request(url: str, headers: Json, params: Json, 
-                      raise_flag: bool = True, timeout: int = 300, 
-                      retries: int = 5, retry_delay: int = 5) -> APIResponse:
+def send_post_request(url: str, headers: Json, params: Json,
+                      raise_flag: bool = True) -> APIResponse:
     """
     HTTP POST method로 request를 보내고 APIResponse 객체를 반환한다.
-    실패 시 일정 시간 간격으로 재시도를 수행한다.
+    요청 실패 시 1초 간격으로 최대 5번 재시도한다.
     """
-    for attempt in range(retries):
+    max_retries = 5
+    retry_interval = 1  # seconds
+    
+    for attempt in range(max_retries):
         try:
-            resp = requests.post(url, headers=headers, data=json.dumps(params), timeout=timeout)
+            resp = requests.post(url, headers=headers,
+                               data=json.dumps(params), timeout=30)
             api_resp = APIResponse(resp)
+
             if raise_flag:
                 api_resp.raise_if_error()
+
             return api_resp
-        except (RequestException, RuntimeError) as e:
-            if attempt < retries - 1:
-                print(f"POST 요청 실패, {retry_delay}초 후 재시도. ({attempt + 1}/{retries})")
-                time.sleep(retry_delay)
+        except (RuntimeError, requests.RequestException, JSONDecodeError):
+            if attempt < max_retries - 1:
+                time.sleep(retry_interval)
+                continue
             else:
-                print("POST 요청 실패: 재시도 횟수 초과.")
-                raise e
-
-
+                raise
